@@ -1,0 +1,66 @@
+{
+	"format": "tdn",
+	"version": "1.0",
+	"build": 46,
+	"generator": "Embody/5.0.210",
+	"td_build": "099.2025.32280",
+	"exported_at": "2026-03-14T07:16:43Z",
+	"network_path": "/gcp/firestore/collections",
+	"options": {
+		"include_dat_content": false
+	},
+	"type_defaults": {
+		"tableDAT": {
+			"size": [130, 90],
+			"color": [0.67, 0.67, 0.67]
+		},
+		"datexecuteDAT": {
+			"parameters": {
+				"fromop": "=parent()",
+				"language": "python"
+			},
+			"size": [130, 90],
+			"color": [0.67, 0.67, 0.67]
+		}
+	},
+	"operators": [
+		{
+			"name": "ok",
+			"type": "tableDAT",
+			"position": [200, 0]
+		},
+		{
+			"name": "neo",
+			"type": "tableDAT"
+		},
+		{
+			"name": "three",
+			"type": "tableDAT",
+			"position": [400, 0]
+		},
+		{
+			"name": "ok_cellwatch",
+			"type": "datexecuteDAT",
+			"parameters": {
+				"dat": "ok"
+			},
+			"position": [200, -100]
+		},
+		{
+			"name": "neo_cellwatch",
+			"type": "datexecuteDAT",
+			"parameters": {
+				"dat": "neo"
+			},
+			"position": [0, -100]
+		},
+		{
+			"name": "three_cellwatch",
+			"type": "datexecuteDAT",
+			"parameters": {
+				"dat": "three"
+			},
+			"position": [400, -100]
+		}
+	]
+}

@@ -1,0 +1,194 @@
+{
+	"format": "tdn",
+	"version": "1.0",
+	"build": 64,
+	"generator": "Embody/5.0.210",
+	"td_build": "099.2025.32280",
+	"exported_at": "2026-03-14T07:16:43Z",
+	"network_path": "/gcp/firestore",
+	"options": {
+		"include_dat_content": false
+	},
+	"type_defaults": {
+		"tableDAT": {
+			"parameters": {
+				"syncfile": true,
+				"rows": 1
+			},
+			"size": [130, 90],
+			"color": [0.9, 0.3, 0.4],
+			"tags": ["tsv"]
+		},
+		"textDAT": {
+			"parameters": {
+				"language": "python"
+			},
+			"size": [130, 90]
+		}
+	},
+	"operators": [
+		{
+			"name": "log",
+			"type": "fifoDAT",
+			"parameters": {
+				"callbacks": "log_callbacks",
+				"fromop": "=parent()",
+				"maxlines": 200
+			},
+			"size": [130, 90],
+			"color": [0.67, 0.67, 0.67]
+		},
+		{
+			"name": "status",
+			"type": "tableDAT",
+			"parameters": {
+				"file": "gcp/firestore/status.tsv",
+				"cols": 1
+			},
+			"position": [300, 0]
+		},
+		{
+			"name": "par_exec",
+			"type": "parameterexecuteDAT",
+			"parameters": {
+				"fromop": "=parent()",
+				"op": "=parent()",
+				"pars": "*",
+				"file": "gcp/firestore/par_exec.py",
+				"syncfile": true,
+				"language": "python"
+			},
+			"flags": ["viewer"],
+			"position": [0, -400],
+			"size": [130, 90],
+			"color": [0.9, 0.3, 0.4],
+			"tags": ["py"]
+		},
+		{
+			"name": "collections",
+			"type": "baseCOMP",
+			"custom_pars": {
+				"About": [
+					{
+						"name": "Build",
+						"style": "Int",
+						"label": "Build Number",
+						"readOnly": true,
+						"value": 46
+					},
+					{
+						"name": "Date",
+						"style": "Str",
+						"label": "Build Date",
+						"readOnly": true,
+						"value": "2026-03-14 07:16:32 UTC"
+					},
+					{
+						"name": "Touchbuild",
+						"style": "Str",
+						"label": "Touch Build",
+						"readOnly": true,
+						"value": "2025.32280"
+					}
+				]
+			},
+			"position": [900, 0],
+			"size": [160, 130],
+			"color": [0.3, 0.5, 0.9],
+			"tags": ["tdn"]
+		},
+		{
+			"name": "ext_bootstrap",
+			"type": "textDAT",
+			"parameters": {
+				"file": "gcp/firestore/ext_bootstrap.py",
+				"syncfile": true
+			},
+			"position": [0, 400],
+			"color": [0.9, 0.3, 0.4],
+			"tags": ["py"]
+		},
+		{
+			"name": "ext_firestore",
+			"type": "textDAT",
+			"parameters": {
+				"file": "gcp/firestore/ext_firestore.py",
+				"syncfile": true
+			},
+			"position": [900, 400],
+			"color": [0.9, 0.3, 0.4],
+			"tags": ["py"]
+		},
+		{
+			"name": "log_callbacks",
+			"type": "textDAT",
+			"flags": ["viewer"],
+			"position": [0, -120],
+			"color": [0.67, 0.67, 0.67],
+			"dock": "log"
+		},
+		{
+			"name": "ext_connection",
+			"type": "textDAT",
+			"parameters": {
+				"file": "gcp/firestore/ext_connection.py",
+				"syncfile": true
+			},
+			"position": [300, 400],
+			"color": [0.9, 0.3, 0.4],
+			"tags": ["py"]
+		},
+		{
+			"name": "ext_write_queue",
+			"type": "textDAT",
+			"parameters": {
+				"file": "gcp/firestore/ext_write_queue.py",
+				"syncfile": true
+			},
+			"position": [600, 400],
+			"color": [0.9, 0.3, 0.4],
+			"tags": ["py"]
+		},
+		{
+			"name": "write_queue_dat",
+			"type": "tableDAT",
+			"parameters": {
+				"file": "gcp/firestore/write_queue_dat.tsv",
+				"cols": 8
+			},
+			"position": [600, 0]
+		}
+	],
+	"annotations": [
+		{
+			"name": "annotate1",
+			"mode": "annotate",
+			"title": "i",
+			"text": "BootstrapExt · ConnectionExt · WriteQueueExt · FirestoreExt",
+			"position": [-100, 300],
+			"size": [1230, 290],
+			"color": [0.18, 0.25, 0.38],
+			"opacity": 0.7
+		},
+		{
+			"name": "annotate2",
+			"mode": "annotate",
+			"title": "Data",
+			"text": "log · status · write_queue_dat · collections · log_callbacks",
+			"position": [-100, -145],
+			"size": [1430, 375],
+			"color": [0.18, 0.32, 0.22],
+			"opacity": 0.7
+		},
+		{
+			"name": "annotate3",
+			"mode": "annotate",
+			"title": "Exec",
+			"text": "par_exec (pulse handler)",
+			"position": [-100, -500],
+			"size": [1230, 290],
+			"color": [0.3, 0.22, 0.18],
+			"opacity": 0.7
+		}
+	]
+}
