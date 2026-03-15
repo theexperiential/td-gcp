@@ -1,14 +1,12 @@
-# td-gcp
+# TouchDesigner × GCP Integration Suite
 
-Google Cloud Platform integration for TouchDesigner.
+Drop-in COMPs that connect TouchDesigner to Google Cloud Platform services -- real-time data sync, cloud storage, and more. Each component handles authentication, connection management, and offline resilience so you can focus on your project.
 
-Drop-in COMPs that connect TouchDesigner to GCP services with built-in authentication, connection management, and offline resilience.
-
-## Components
+---
 
 ### Firestore
 
-Real-time bidirectional sync between Firestore collections and TouchDesigner tableDATs.
+Real-time bidirectional sync between Firestore collections and TouchDesigner tableDATs. Includes offline write queue, circuit breaker, and auto-bootstrap.
 
 - **Real-time listeners** -- Firestore changes appear in tableDATs instantly
 - **Write-back** -- edit table cells and changes push to Firestore automatically (500ms debounce)
@@ -22,23 +20,26 @@ Real-time bidirectional sync between Firestore collections and TouchDesigner tab
 
 ### Storage *(coming soon)*
 
+Upload, download, and manage files in Firebase Storage directly from TouchDesigner.
+
+---
+
+## Requirements
+
+- **TouchDesigner** 2025.32280 or later
+- **Google Cloud project** with the relevant service(s) enabled (e.g., Firestore)
+- **Service account JSON key** with appropriate permissions
+
 ## Quick Start
 
 1. Download the latest `.tox` from [Releases](https://github.com/theexperiential/td-gcp/releases)
 2. Drag it into your TouchDesigner project
-3. Set **Private Key File** to your GCP service account JSON key
-4. Approve the one-time dependency install when prompted
-5. The COMP connects and collection tables appear automatically
-
-## Requirements
-
-- TouchDesigner 2025.32280+
-- GCP project with the relevant service enabled
-- Service account JSON key with appropriate permissions
+3. Set the **Private Key File** parameter to your service account JSON
+4. The component auto-installs Python dependencies and connects
 
 ## Documentation
 
-Full documentation: **[theexperiential.github.io/td-gcp](https://theexperiential.github.io/td-gcp/)**
+Full docs: **[theexperiential.github.io/td-gcp](https://theexperiential.github.io/td-gcp/)**
 
 ## License
 

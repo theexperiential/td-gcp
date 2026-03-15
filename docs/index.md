@@ -1,4 +1,4 @@
-# TouchDesigner x GCP Integration Suite
+# TouchDesigner × GCP Integration Suite
 
 Drop-in COMPs that connect TouchDesigner to Google Cloud Platform services -- real-time data sync, cloud storage, and more. Each component handles authentication, connection management, and offline resilience so you can focus on your project.
 
