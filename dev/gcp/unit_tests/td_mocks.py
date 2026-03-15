@@ -1,6 +1,6 @@
 ﻿"""
 Shared mock objects for TD and Firestore types.
-Import this from test modules -- conftest.py re-exports fixtures that use these.
+Import this from test modules — conftest.py re-exports fixtures that use these.
 """
 
 import datetime

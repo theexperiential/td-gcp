@@ -181,7 +181,7 @@ class TestBurstSameDocUpdates:
 
     @pytest.mark.parametrize('count', [10, 50, 100])
     def test_same_doc_modified_n_times(self, ext, count):
-        """Modify the same doc N times -- only the last value should persist."""
+        """Modify the same doc N times — only the last value should persist."""
         # First add
         ext._inbound_queue.put((
             'users', 'target', 'added',
@@ -228,7 +228,7 @@ class TestBurstSameDocUpdates:
         assert ('users', 'vdoc') in ext._versions
 
     def test_interleaved_docs_same_collection(self, ext):
-        """Alternate updates between 2 docs -- both should have correct final state."""
+        """Alternate updates between 2 docs — both should have correct final state."""
         ext._inbound_queue.put(('users', 'a', 'added', {'v': 0}, '2025-01-01T00:00:00'))
         ext._inbound_queue.put(('users', 'b', 'added', {'v': 0}, '2025-01-01T00:00:00'))
         ext._drain_inbound()
@@ -275,7 +275,7 @@ class TestInterleavedOperations:
         assert ext.GetDoc('users', 'cycle') is None
 
     def test_mixed_operations_50_docs(self, ext):
-        """Add 50, modify 25, remove 10 -- verify final counts."""
+        """Add 50, modify 25, remove 10 — verify final counts."""
         # Add 50
         for i in range(50):
             ext._inbound_queue.put((
@@ -321,7 +321,7 @@ class TestInterleavedOperations:
         assert d30.get('modified') is None
 
     def test_re_add_after_remove(self, ext):
-        """Remove then re-add same doc_id -- should exist with new data."""
+        """Remove then re-add same doc_id — should exist with new data."""
         ext._inbound_queue.put(('users', 'phoenix', 'added', {'v': 1}, '2025-01-01T00:00:00'))
         ext._drain_inbound()
 
@@ -350,7 +350,7 @@ class TestBurstOutbound:
 
     @pytest.mark.parametrize('count', [10, 50, 100])
     def test_push_batch_n_ops(self, ext, count):
-        """PushBatch with N operations -- all should be submitted."""
+        """PushBatch with N operations — all should be submitted."""
         captured = self._setup_capture(ext)
 
         ops = [
@@ -419,7 +419,7 @@ class TestWriteBackBurst:
         return ext.my.op('collections/users')
 
     def test_flush_dirty_10_docs(self, ext):
-        """Mark 10 docs dirty and flush -- all should submit."""
+        """Mark 10 docs dirty and flush — all should submit."""
         dat = self._populate(ext, 10)
 
         captured = []
@@ -448,7 +448,7 @@ class TestWriteBackBurst:
         assert len(captured) == 50
 
     def test_flush_dirty_100_docs(self, ext):
-        """Mark 100 docs dirty and flush -- stress test."""
+        """Mark 100 docs dirty and flush — stress test."""
         dat = self._populate(ext, 100)
 
         captured = []
@@ -464,7 +464,7 @@ class TestWriteBackBurst:
         assert all(dat[i, '_dirty'].val == '0' for i in range(1, 101))
 
     def test_partial_dirty_mixed(self, ext):
-        """50 docs, only 20 dirty -- only 20 should flush."""
+        """50 docs, only 20 dirty — only 20 should flush."""
         dat = self._populate(ext, 50)
 
         captured = []
@@ -605,7 +605,7 @@ class TestFullRoundtripBurst:
             assert 'original' in item['payload']
 
     def test_receive_delete_readd_burst(self, ext):
-        """Add 20, remove all, re-add 20 -- table should have 20."""
+        """Add 20, remove all, re-add 20 — table should have 20."""
         for i in range(20):
             ext._inbound_queue.put(('users', f'u{i}', 'added', {'v': i}, f'2025-01-01T00:00:{i:02d}'))
         while not ext._inbound_queue.empty():

@@ -1,5 +1,5 @@
 ﻿"""
-Tests for WriteQueueExt -- SQLite-backed offline write persistence.
+Tests for WriteQueueExt — SQLite-backed offline write persistence.
 
 Uses real SQLite (in-memory or tmp_path) to test:
   - Enqueue/dequeue/remove/retry/clear lifecycle

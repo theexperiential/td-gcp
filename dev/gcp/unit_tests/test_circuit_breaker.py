@@ -1,5 +1,5 @@
 ﻿"""
-Tests for ConnectionExt -- circuit breaker with exponential backoff.
+Tests for ConnectionExt — circuit breaker with exponential backoff.
 
 Covers all state transitions: CLOSED → OPEN → HALF_OPEN → CLOSED,
 failure counting, backoff calculations, thread safety, and reset.

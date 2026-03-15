@@ -66,6 +66,18 @@ def _execute_write(db, item):
 			'success': False, 'update_time': '', 'error': str(e),
 		}
 
+def _discover_collections_worker(db, result_queue):
+	"""Pool thread: list Firestore collection IDs, put result in queue. No TD access."""
+	try:
+		colls = [c.id for c in db.collections()]
+		result_queue.put(('ok', colls))
+	except Exception as e:
+		result_queue.put(('error', str(e)))
+
+def _execute_write_queued(db, item, result_queue):
+	"""Pool thread: execute one Firestore write, put result in queue. No TD access."""
+	result_queue.put(_execute_write(db, item))
+
 def _reconnect_sleep(delay):
 	"""Pool thread: sleep before reconnect attempt."""
 	import time
@@ -163,19 +175,21 @@ class FirestoreExt:
 	Threading model (no asyncio, no TDAsyncIO):
 	  Main thread (TD cook):
 	    - _drain_inbound()       RefreshHook -- drains inbound queue every frame
-	    - _on_write_success()    SuccessHook -- processes write results on main thread
-	    - Connect/Disconnect     manage Firebase lifecycle
+	    - Connect/Disconnect     manage Firebase lifecycle (synchronous -- gRPC
+	                             requires main thread for app init)
 
-	  ThreadManager pool tasks:
-	    - Bootstrap              uv venv setup → _on_bootstrap_success/error
-	    - Write tasks            one TDTask per write → _on_write_success/error
-	    - Reconnect              sleep(delay) → _on_reconnect_done
+	  ThreadManager pool tasks (workers pass results via queue.Queue,
+	  processed by _drain_inbound on the main thread every frame):
+	    - Bootstrap              uv venv setup --> SuccessHook/ExceptHook
+	    - Discovery              db.collections() --> _discovery_results queue
+	    - Write tasks            per-write --> _write_results queue
+	    - Reconnect              sleep(delay) --> SuccessHook
 
 	  ThreadManager standalone task:
 	    - Keepalive              blocks on shutdown_event; RefreshHook=_drain_inbound
 
 	  Firebase SDK threads (unmanaged by us):
-	    - on_snapshot callbacks  → _inbound_queue.put() ONLY. No TD access.
+	    - on_snapshot callbacks  --> _inbound_queue.put() ONLY. No TD access.
 
 	Data format: JSON-per-row in collection tableDATs.
 	  Columns: doc_id | payload (JSON) | _version | _synced_at | _dirty
@@ -210,6 +224,11 @@ class FirestoreExt:
 		# Periodic collection discovery
 		self._last_discovery = 0.0
 		self._last_discovered_colls = set()
+		self._discovery_in_progress = False
+		self._discovery_results = queue.Queue()
+
+		# Write result queue: workers → main thread via _drain_inbound
+		self._write_results = queue.Queue()
 
 		# Structured log ring buffer (all levels, for programmatic access)
 		self._log_buffer = deque(maxlen=500)
@@ -329,7 +348,7 @@ class FirestoreExt:
 	# ── Public: Connection ─────────────────────────────────────────────────────
 
 	def Connect(self):
-		"""Connect to Firestore. Main thread."""
+		"""Connect to Firestore. Main thread (blocks during Firebase init)."""
 		# Guard: if this instance was replaced by a newer extension init, bail out
 		if self.my.ext.FirestoreExt is not self:
 			return
@@ -347,27 +366,28 @@ class FirestoreExt:
 		# Tear down stale listeners so WatchCollection can re-register fresh
 		self._stop_listeners()
 		self._active_collections.clear()
-
+		self._cleanup_firebase()
 		self._update_status('connecting')
+
 		try:
 			self._connect_firebase()
-			conn.RecordSuccess()
-			self._update_status('connected')
-			self._log('info', 'Connected to Firestore')
-
-			if self.my.par.Cachehydrate.eval():
-				self._hydrate_from_cache()
-
-			if self.my.par.Enablelistener.eval():
-				self._discover_and_watch()
-
 		except Exception as e:
-			import traceback
 			conn.RecordFailure()
 			delay = conn.GetBackoffSeconds()
-			self._log('error', f'Connect failed: {e} -- retry in {delay:.0f}s\n{traceback.format_exc()}')
+			self._log('error', f'Connect failed: {e} -- retry in {delay:.0f}s')
 			self._update_status('error', error=str(e))
 			self._schedule_reconnect(delay)
+			return
+
+		conn.RecordSuccess()
+		self._update_status('connected')
+		self._log('info', 'Connected to Firestore')
+
+		if self.my.par.Cachehydrate.eval():
+			self._hydrate_from_cache()
+
+		if self.my.par.Enablelistener.eval():
+			self._discover_and_watch()
 
 	def Disconnect(self):
 		"""Clean disconnect. Main thread."""
@@ -624,6 +644,35 @@ class FirestoreExt:
 			except queue.Empty:
 				break
 
+		# Process write results from pool workers
+		while True:
+			try:
+				wr = self._write_results.get_nowait()
+				self._process_write_result(wr)
+			except queue.Empty:
+				break
+
+		# Process discovery results from pool worker
+		try:
+			status, data = self._discovery_results.get_nowait()
+			self._discovery_in_progress = False
+			if status == 'ok':
+				colls = data
+				if colls:
+					coll_set = set(colls)
+					if coll_set != self._last_discovered_colls:
+						self._log('info', f'Auto-discovered {len(colls)} collections: {" ".join(sorted(colls))}')
+						self._last_discovered_colls = coll_set
+				else:
+					self._log('warning', 'No collections found in Firestore database')
+				for coll in colls:
+					if coll:
+						self.WatchCollection(coll)
+			else:
+				self._log('error', f'Collection discovery failed: {data}')
+		except queue.Empty:
+			pass
+
 		# Periodic auto-discovery of new collections (only in auto-discover mode)
 		if (self._db
 				and self.my.par.Collections.eval().strip() in ('', '*')
@@ -631,14 +680,9 @@ class FirestoreExt:
 			self._last_discovery = time.time()
 			self._discover_and_watch()
 
-	def _on_write_success(self, returnValue=None):
-		"""Main thread. SuccessHook called by ThreadManager after write task."""
-		if returnValue:
-			self._process_write_result(returnValue)
-
-	def _on_write_error(self, error):
-		"""Main thread. ExceptHook called by ThreadManager on write task exception."""
-		self._log('error', f'Write task raised: {error}')
+	# Note: write and discovery results are passed via queue.Queue, NOT via
+	# SuccessHook returnValue (ThreadManager calls SuccessHook with no args).
+	# _drain_inbound processes results on the main thread every frame.
 
 	def _on_reconnect_done(self, returnValue=None):
 		"""Main thread. SuccessHook called after reconnect sleep completes."""
@@ -663,28 +707,26 @@ class FirestoreExt:
 		self._firestore_mod = firestore
 
 	def _connect_firebase(self):
-		"""Initialize Firebase app and Firestore client. Main thread."""
+		"""Initialize Firebase app and Firestore client. Main thread (blocks)."""
 		key_path = self.my.par.Privatekey.eval()
 		db_id = self.my.par.Databaseid.eval() or '(default)'
-
-		if not key_path:
-			raise ValueError('Privatekey parameter is not set')
-
-		self._cleanup_firebase()
+		app_name = f'td_{self.my.name}'
 
 		cred = self._credentials_cls.Certificate(key_path)
 		with open(key_path, 'r') as f:
 			project_id = json.loads(f.read()).get('project_id', '')
 		if not project_id:
 			raise ValueError('Service account JSON is missing project_id')
-		app_name = f'td_{self.my.name}'
+
 		self._firebase_app = self._firebase_admin.initialize_app(
-			cred, {'projectId': project_id}, name=app_name
+			cred, {'projectId': project_id}, name=app_name,
 		)
 		if db_id == '(default)':
 			self._db = self._firestore_mod.client(app=self._firebase_app)
 		else:
-			self._db = self._firestore_mod.client(app=self._firebase_app, database_id=db_id)
+			self._db = self._firestore_mod.client(
+				app=self._firebase_app, database_id=db_id,
+			)
 
 	def _cleanup_firebase(self):
 		"""Safely delete Firebase app instance. Main thread."""
@@ -693,13 +735,6 @@ class FirestoreExt:
 				self._firebase_admin.delete_app(self._firebase_app)
 			except Exception:
 				pass
-		# Fallback: delete by name in case self._firebase_app ref went stale
-		if self._firebase_admin:
-			try:
-				app = self._firebase_admin.get_app(f'td_{self.my.name}')
-				self._firebase_admin.delete_app(app)
-			except ValueError:
-				pass  # app doesn't exist -- fine
 		self._firebase_app = None
 		self._db = None
 
@@ -715,18 +750,24 @@ class FirestoreExt:
 	def _discover_and_watch(self):
 		"""Resolve collection list and start watchers. Main thread."""
 		colls = self.my.par.Collections.eval().split()
-		if not any(colls) or colls == ['*']:
-			colls = [c.id for c in self._db.collections()]
-			if colls:
-				coll_set = set(colls)
-				if coll_set != self._last_discovered_colls:
-					self._log('info', f'Auto-discovered {len(colls)} collections: {" ".join(sorted(colls))}')
-					self._last_discovered_colls = coll_set
-			else:
-				self._log('warning', 'No collections found in Firestore database')
-		for coll in colls:
-			if coll:
-				self.WatchCollection(coll)
+		if any(colls) and colls != ['*']:
+			# Explicit collection list -- no network call needed
+			for coll in colls:
+				if coll:
+					self.WatchCollection(coll)
+			return
+
+		# Auto-discover mode: offload blocking db.collections() to thread pool
+		if self._discovery_in_progress:
+			return
+		self._discovery_in_progress = True
+
+		tm = op.TDResources.ThreadManager
+		task = tm.TDTask(
+			target=_discover_collections_worker,
+			args=(self._db, self._discovery_results),
+		)
+		tm.EnqueueTask(task)
 
 	# ── Internal: Snapshot callback factory ──────────────────────────────────
 
@@ -796,10 +837,8 @@ class FirestoreExt:
 
 		tm = op.TDResources.ThreadManager
 		task = tm.TDTask(
-			target=_execute_write,
-			args=(db, item),
-			SuccessHook=self._on_write_success,
-			ExceptHook=self._on_write_error,
+			target=_execute_write_queued,
+			args=(db, item, self._write_results),
 		)
 		tm.EnqueueTask(task)
 
@@ -892,7 +931,8 @@ class FirestoreExt:
 	# Grid layout for collection DATs inside the collections COMP
 	_GRID_COLS = 4        # DATs per row before wrapping
 	_GRID_X_STEP = 200    # horizontal spacing between DATs
-	_GRID_Y_STEP = -200   # vertical spacing (negative = downward)
+	_GRID_Y_STEP = -400   # vertical spacing (table + cellwatch + padding)
+	_CELLWATCH_COLOR = (0.35, 0.35, 0.35)  # darker grey so watchers recede
 
 	def _ensure_collection_dat(self, collection):
 		"""Create a collection tableDAT if one doesn't exist, positioned on a grid."""
@@ -929,7 +969,8 @@ class FirestoreExt:
 		watcher_name = f'{collection}_cellwatch'
 		watcher = collections_comp.create(datexecuteDAT, watcher_name)
 		watcher.nodeX = x
-		watcher.nodeY = y - 100
+		watcher.nodeY = y - 200
+		watcher.color = self._CELLWATCH_COLOR
 		watcher.par.dat = dat
 		watcher.par.tablechange = True
 		watcher.par.active = True

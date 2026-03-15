@@ -53,9 +53,6 @@ from td_mocks import (
 def ext():
     owner = MockOwnerComp('firestore', {
         'Filterfields': '',
-        'Filterfieldsmode': 'exclude',
-        'Filterdocs': '',
-        'Filterdocsmode': 'include',
         'Enablecache': False,
         'Callbacksdat': '',
         'Logop': '',
@@ -451,44 +448,6 @@ class TestOnSnapshotSerialization:
         filtered = {k: v for k, v in sample_user_doc.items() if k not in filter_set}
         serialized = _serialize_payload(filtered)
         assert 'waiverSignature' not in serialized
-
-    def test_field_filter_exclude_mode(self, sample_user_doc):
-        """Exclude mode removes listed fields (default behavior)."""
-        filter_set = {'displayName', 'loginCount'}
-        mode = 'exclude'
-        if mode == 'include':
-            data = {k: v for k, v in sample_user_doc.items() if k in filter_set}
-        else:
-            data = {k: v for k, v in sample_user_doc.items() if k not in filter_set}
-        serialized = _serialize_payload(data)
-        assert 'displayName' not in serialized
-        assert 'loginCount' not in serialized
-        assert 'lastLogin' in serialized
-
-    def test_field_filter_include_mode(self, sample_user_doc):
-        """Include mode keeps only listed fields."""
-        filter_set = {'displayName', 'loginCount'}
-        mode = 'include'
-        if mode == 'include':
-            data = {k: v for k, v in sample_user_doc.items() if k in filter_set}
-        else:
-            data = {k: v for k, v in sample_user_doc.items() if k not in filter_set}
-        serialized = _serialize_payload(data)
-        assert set(serialized.keys()) == {'displayName', 'loginCount'}
-
-    def test_field_filter_empty_set_no_filtering(self, sample_user_doc):
-        """Empty filter set passes all fields regardless of mode."""
-        filter_set = set()
-        for mode in ('include', 'exclude'):
-            if filter_set:
-                if mode == 'include':
-                    data = {k: v for k, v in sample_user_doc.items() if k in filter_set}
-                else:
-                    data = {k: v for k, v in sample_user_doc.items() if k not in filter_set}
-            else:
-                data = sample_user_doc
-            serialized = _serialize_payload(data)
-            assert len(serialized) == len(sample_user_doc)
 
     def test_snapshot_empty_doc(self):
         serialized = _serialize_payload({})

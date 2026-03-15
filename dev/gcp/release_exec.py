@@ -1,4 +1,4 @@
-﻿# Release Execute DAT -- pre/post save hooks for portable .tox export
+# Release Execute DAT -- pre/post save hooks for portable .tox export
 #
 # Timing:
 #   Pre-save:  This DAT bumps build and clears sensitive params.

@@ -3,7 +3,7 @@ Integration tests for the redesigned FirestoreExt (ext_firestore.py).
 
 Tests the main extension's queue processing, inbound/outbound pipelines,
 version tracking, self-echo prevention, table management, and lifecycle.
-All Firebase/TD interactions are mocked -- only the extension logic is tested.
+All Firebase/TD interactions are mocked — only the extension logic is tested.
 """
 
 import json
@@ -18,7 +18,7 @@ from unittest.mock import MagicMock, patch, call
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'firestore'))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'dev' / 'gcp' / 'firestore'))
 
 import builtins
 builtins.debug = lambda *a, **kw: None
@@ -46,9 +46,6 @@ def ext():
     """A fully wired FirestoreExt with mocked sub-extensions."""
     owner = MockOwnerComp('firestore', {
         'Filterfields': '',
-        'Filterfieldsmode': 'exclude',
-        'Filterdocs': '',
-        'Filterdocsmode': 'include',
         'Enablecache': True,
         'Callbacksdat': '',
         'Logop': '',
@@ -80,7 +77,7 @@ def ext():
             dat = MockTableDAT(name)
             owner.register_op(f'collections/{name}', dat)
             return dat
-        # datexecDAT or other types -- return a MagicMock
+        # datexecDAT or other types — return a MagicMock
         mock_op = MagicMock(name=f'mock_{name}')
         mock_op.name = name
         return mock_op
@@ -579,7 +576,7 @@ class TestFullPipelineRoundtrip:
         assert result == payload
 
     def test_rapid_updates_last_value_wins(self, ext):
-        """Multiple rapid updates to the same doc -- last value should persist."""
+        """Multiple rapid updates to the same doc — last value should persist."""
         for i in range(10):
             ext._inbound_queue.put(('col', 'doc1', 'modified', {'v': i}, f'2025-01-01T00:00:{i:02d}'))
         ext._drain_inbound()
@@ -756,7 +753,7 @@ class TestWriteBack:
         ext.FlushDirty()
 
         assert len(captured) == 1  # Only u2
-        assert dat[1, '_dirty'].val == '1'  # Still dirty -- bad JSON
+        assert dat[1, '_dirty'].val == '1'  # Still dirty — bad JSON
         assert dat[2, '_dirty'].val == '0'
 
     def test_remote_write_does_not_trigger_writeback(self, ext):
@@ -780,111 +777,3 @@ class TestWriteBack:
         dat.__class__.__setitem__ = original_setitem
         assert states == [True]  # Was True during the write
         assert ext._applying_remote is False  # Reset after
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# Document & Field Filtering via _make_snapshot_callback
-# ═══════════════════════════════════════════════════════════════════════════
-
-class TestSnapshotFiltering:
-    """Test document and field filtering in the snapshot callback."""
-
-    @staticmethod
-    def _make_change(doc_id, data, change_type='ADDED'):
-        ut = FakeDatetimeWithNanoseconds(2025, 1, 1)
-        return FakeDocumentChange(doc_id, data, change_type, update_time=ut)
-
-    def _drain(self, ext):
-        items = []
-        while not ext._inbound_queue.empty():
-            items.append(ext._inbound_queue.get_nowait())
-        return items
-
-    # ── Document filter: include mode ─────────────────────────────────────
-
-    def test_doc_filter_include_passes_listed(self, ext):
-        cb = ext._make_snapshot_callback('col', set(), 'exclude', {'d1', 'd2'}, 'include')
-        cb([], [self._make_change('d1', {'x': 1})], None)
-        items = self._drain(ext)
-        assert len(items) == 1
-        assert items[0][1] == 'd1'
-
-    def test_doc_filter_include_blocks_unlisted(self, ext):
-        cb = ext._make_snapshot_callback('col', set(), 'exclude', {'d1'}, 'include')
-        cb([], [self._make_change('d99', {'x': 1})], None)
-        items = self._drain(ext)
-        assert len(items) == 0
-
-    # ── Document filter: exclude mode ─────────────────────────────────────
-
-    def test_doc_filter_exclude_blocks_listed(self, ext):
-        cb = ext._make_snapshot_callback('col', set(), 'exclude', {'bad'}, 'exclude')
-        cb([], [self._make_change('bad', {'x': 1})], None)
-        items = self._drain(ext)
-        assert len(items) == 0
-
-    def test_doc_filter_exclude_passes_unlisted(self, ext):
-        cb = ext._make_snapshot_callback('col', set(), 'exclude', {'bad'}, 'exclude')
-        cb([], [self._make_change('good', {'x': 1})], None)
-        items = self._drain(ext)
-        assert len(items) == 1
-        assert items[0][1] == 'good'
-
-    # ── Empty doc filter passes all ───────────────────────────────────────
-
-    def test_doc_filter_empty_set_passes_all(self, ext):
-        cb = ext._make_snapshot_callback('col', set(), 'exclude', set(), 'include')
-        cb([], [
-            self._make_change('a', {'x': 1}),
-            self._make_change('b', {'x': 2}),
-        ], None)
-        items = self._drain(ext)
-        assert len(items) == 2
-
-    # ── Removed events respect doc filter ─────────────────────────────────
-
-    def test_doc_filter_removed_respects_include(self, ext):
-        """Removal of a doc NOT in include set should be skipped."""
-        cb = ext._make_snapshot_callback('col', set(), 'exclude', {'d1'}, 'include')
-        cb([], [self._make_change('d99', None, 'REMOVED')], None)
-        items = self._drain(ext)
-        assert len(items) == 0
-
-    def test_doc_filter_removed_passes_included(self, ext):
-        """Removal of a doc IN include set should pass through."""
-        cb = ext._make_snapshot_callback('col', set(), 'exclude', {'d1'}, 'include')
-        cb([], [self._make_change('d1', None, 'REMOVED')], None)
-        items = self._drain(ext)
-        assert len(items) == 1
-        assert items[0][2] == 'removed'
-
-    # ── Field filter mode ─────────────────────────────────────────────────
-
-    def test_field_filter_include_mode(self, ext):
-        cb = ext._make_snapshot_callback('col', {'name', 'age'}, 'include', set(), 'include')
-        cb([], [self._make_change('d1', {'name': 'A', 'age': 30, 'secret': 'x'})], None)
-        items = self._drain(ext)
-        payload = items[0][3]
-        assert set(payload.keys()) == {'name', 'age'}
-
-    def test_field_filter_exclude_mode(self, ext):
-        cb = ext._make_snapshot_callback('col', {'secret'}, 'exclude', set(), 'include')
-        cb([], [self._make_change('d1', {'name': 'A', 'secret': 'x'})], None)
-        items = self._drain(ext)
-        payload = items[0][3]
-        assert 'secret' not in payload
-        assert 'name' in payload
-
-    # ── Combined doc + field filter ───────────────────────────────────────
-
-    def test_combined_doc_and_field_filter(self, ext):
-        """Doc include filter + field include filter applied together."""
-        cb = ext._make_snapshot_callback('col', {'name'}, 'include', {'d1'}, 'include')
-        cb([], [
-            self._make_change('d1', {'name': 'A', 'secret': 'x'}),
-            self._make_change('d2', {'name': 'B', 'secret': 'y'}),
-        ], None)
-        items = self._drain(ext)
-        assert len(items) == 1
-        assert items[0][1] == 'd1'
-        assert set(items[0][3].keys()) == {'name'}
