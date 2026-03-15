@@ -12,6 +12,7 @@ __pycache__/
 *.*.toe
 dev/cache/
 dev/stress_test_output.txt
+site/
 
 # Embody / Envoy (auto-managed)
 Backup/

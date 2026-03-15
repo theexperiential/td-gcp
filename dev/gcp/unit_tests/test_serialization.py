@@ -35,7 +35,7 @@ builtins.datexecuteDAT = MagicMock()
 builtins.absTime = MagicMock()
 builtins.absTime.frame = 0
 
-from ext_firestore import FirestoreExt, _serialize_value
+from ext_firestore import FirestoreExt, _serialize_value, _deserialize_value
 from td_mocks import (
     FakeDatetimeWithNanoseconds,
     FakeDocumentReference,
@@ -162,14 +162,14 @@ class TestSerializeValueTimestamps:
         ts = FakeDatetimeWithNanoseconds(2025, 6, 15, 12, 30, 45, 123456,
                                           tzinfo=datetime.timezone.utc)
         result = _serialize_value(ts)
-        assert isinstance(result, str)
-        assert '2025-06-15' in result
+        assert result['__type'] == 'timestamp'
+        assert '2025-06-15' in result['value']
 
     def test_datetime_with_nanoseconds_naive(self):
         ts = FakeDatetimeWithNanoseconds(2025, 1, 1, 0, 0, 0)
         result = _serialize_value(ts)
-        assert isinstance(result, str)
-        assert '2025-01-01' in result
+        assert result['__type'] == 'timestamp'
+        assert '2025-01-01' in result['value']
 
     def test_datetime_with_high_precision_nanos(self):
         ts = FakeDatetimeWithNanoseconds(
@@ -178,26 +178,27 @@ class TestSerializeValueTimestamps:
             nanosecond=999999999,
         )
         result = _serialize_value(ts)
-        assert isinstance(result, str)
+        assert result['__type'] == 'timestamp'
+        assert isinstance(result['value'], str)
 
     def test_regular_datetime(self):
         """Standard datetime should also serialize via isoformat."""
         dt = datetime.datetime(2025, 3, 15, 10, 0, 0, tzinfo=datetime.timezone.utc)
         result = _serialize_value(dt)
-        assert isinstance(result, str)
-        assert '2025-03-15' in result
+        assert result['__type'] == 'timestamp'
+        assert '2025-03-15' in result['value']
 
     def test_date_object(self):
         """datetime.date has isoformat too."""
         d = datetime.date(2025, 6, 15)
         result = _serialize_value(d)
-        assert result == '2025-06-15'
+        assert result == {'__type': 'timestamp', 'value': '2025-06-15'}
 
     def test_time_object(self):
         """datetime.time has isoformat."""
         t = datetime.time(14, 30, 0)
         result = _serialize_value(t)
-        assert result == '14:30:00'
+        assert result == {'__type': 'timestamp', 'value': '14:30:00'}
 
 
 class TestSerializeValueReferences:
@@ -206,34 +207,33 @@ class TestSerializeValueReferences:
     def test_simple_ref(self):
         ref = FakeDocumentReference('users/abc123', 'abc123')
         result = _serialize_value(ref)
-        assert result == 'users/abc123'
+        assert result == {'__type': 'reference', 'value': 'users/abc123'}
 
     def test_deeply_nested_ref(self):
         ref = FakeDocumentReference(
             'projects/p1/databases/db/documents/col/doc', 'doc'
         )
         result = _serialize_value(ref)
-        assert result == 'projects/p1/databases/db/documents/col/doc'
+        assert result == {'__type': 'reference', 'value': 'projects/p1/databases/db/documents/col/doc'}
 
     def test_subcollection_ref(self):
         ref = FakeDocumentReference('users/u1/posts/p1', 'p1')
         result = _serialize_value(ref)
-        assert result == 'users/u1/posts/p1'
+        assert result == {'__type': 'reference', 'value': 'users/u1/posts/p1'}
 
 
 class TestSerializeValueGeoPoints:
-    """Test _serialize_value for GeoPoint objects (fallback to str)."""
+    """Test _serialize_value for GeoPoint objects."""
 
     def test_geopoint(self):
         gp = FakeGeoPoint(40.7128, -74.0060)
         result = _serialize_value(gp)
-        assert isinstance(result, str)
-        assert '40.7128' in result
+        assert result == {'__type': 'geopoint', 'latitude': 40.7128, 'longitude': -74.006}
 
     def test_geopoint_zero(self):
         gp = FakeGeoPoint(0.0, 0.0)
         result = _serialize_value(gp)
-        assert isinstance(result, str)
+        assert result == {'__type': 'geopoint', 'latitude': 0.0, 'longitude': 0.0}
 
 
 class TestSerializeValueBytes:
@@ -242,11 +242,11 @@ class TestSerializeValueBytes:
     def test_bytes(self):
         data = b'\x00\x01\x02\xff'
         result = _serialize_value(data)
-        assert isinstance(result, str)
+        assert result == {'__type': 'bytes', 'value': 'AAEC/w=='}
 
     def test_empty_bytes(self):
         result = _serialize_value(b'')
-        assert isinstance(result, str)
+        assert result == {'__type': 'bytes', 'value': ''}
 
 
 class TestSerializeValueArrays:
@@ -276,19 +276,19 @@ class TestSerializeValueArrays:
                                           tzinfo=datetime.timezone.utc)
         result = _serialize_value([ts])
         assert len(result) == 1
-        assert isinstance(result[0], str)
-        assert '2025-06-15' in result[0]
+        assert result[0]['__type'] == 'timestamp'
+        assert '2025-06-15' in result[0]['value']
 
     def test_array_with_reference(self):
         ref = FakeDocumentReference('col/doc', 'doc')
         result = _serialize_value([ref])
-        assert result == ['col/doc']
+        assert result == [{'__type': 'reference', 'value': 'col/doc'}]
 
     def test_array_with_geopoint(self):
         gp = FakeGeoPoint(51.5074, -0.1278)
         result = _serialize_value([gp])
         assert len(result) == 1
-        assert isinstance(result[0], str)
+        assert result[0]['__type'] == 'geopoint'
 
     def test_large_array(self):
         data = list(range(1000))
@@ -334,8 +334,8 @@ class TestSerializeValueMaps:
         assert result['int'] == 42
         assert result['float'] == 1.5
         assert result['string'] == 'text'
-        assert isinstance(result['timestamp'], str)
-        assert result['reference'] == 'col/doc'
+        assert result['timestamp']['__type'] == 'timestamp'
+        assert result['reference'] == {'__type': 'reference', 'value': 'col/doc'}
         assert result['array'] == [1, 2, 3]
         assert result['map'] == {'inner': 'value'}
 
@@ -369,7 +369,7 @@ class TestSerializePayload:
         assert result['displayName'] == 'Test User'
         assert result['active'] is True
         assert result['loginCount'] == 42
-        assert isinstance(result['lastLogin'], str)
+        assert result['lastLogin']['__type'] == 'timestamp'
         assert result['preferences'] == {
             'theme': 'dark',
             'notifications': True,
@@ -387,14 +387,14 @@ class TestSerializePayload:
         result = _serialize_payload(sample_status_doc)
         assert result['scene_now'] == 'coral'
         assert result['in_transition'] is False
-        assert isinstance(result['start'], str)
-        assert isinstance(result['end'], str)
+        assert result['start']['__type'] == 'timestamp'
+        assert result['end']['__type'] == 'timestamp'
 
     def test_full_schedule_doc(self, sample_schedule_doc):
         result = _serialize_payload(sample_schedule_doc)
         assert result['scene'] == 'aurora'
         assert result['transition_duration'] == 32
-        assert isinstance(result['start'], str)
+        assert result['start']['__type'] == 'timestamp'
 
     def test_all_firestore_types(self, all_firestore_types):
         """Serialize every possible Firestore type in one document."""
@@ -438,7 +438,7 @@ class TestOnSnapshotSerialization:
 
         assert roundtripped['displayName'] == 'Test User'
         assert roundtripped['loginCount'] == 42
-        assert isinstance(roundtripped['lastLogin'], str)
+        assert roundtripped['lastLogin']['__type'] == 'timestamp'
         assert roundtripped['preferences']['theme'] == 'dark'
         assert roundtripped['tags'] == ['vip', 'beta-tester']
 
@@ -537,3 +537,242 @@ class TestOutboundWritePayloads:
 
 
 from td_mocks import MockParameter
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# DESERIALIZATION: _deserialize_value  (JSON type markers -> Firestore SDK)
+# ═══════════════════════════════════════════════════════════════════════════
+
+@pytest.fixture
+def mock_db():
+    """Mock Firestore client for deserialization tests."""
+    db = MagicMock()
+    db.document.side_effect = lambda path: FakeDocumentReference(path)
+    return db
+
+
+class TestDeserializeValuePrimitives:
+    """Primitives pass through unchanged."""
+
+    def test_none(self, mock_db):
+        assert _deserialize_value(None, mock_db) is None
+
+    def test_bool_true(self, mock_db):
+        assert _deserialize_value(True, mock_db) is True
+
+    def test_bool_false(self, mock_db):
+        assert _deserialize_value(False, mock_db) is False
+
+    def test_int(self, mock_db):
+        assert _deserialize_value(42, mock_db) == 42
+
+    def test_float(self, mock_db):
+        assert _deserialize_value(3.14, mock_db) == 3.14
+
+    def test_string(self, mock_db):
+        assert _deserialize_value('hello', mock_db) == 'hello'
+
+    def test_empty_string(self, mock_db):
+        assert _deserialize_value('', mock_db) == ''
+
+
+class TestDeserializeValueMarkers:
+    """Type markers reconstruct correct types."""
+
+    def test_timestamp_utc(self, mock_db):
+        marker = {'__type': 'timestamp', 'value': '2025-06-15T12:30:45+00:00'}
+        result = _deserialize_value(marker, mock_db)
+        assert isinstance(result, datetime.datetime)
+        assert result.year == 2025
+        assert result.month == 6
+        assert result.day == 15
+
+    def test_timestamp_with_z(self, mock_db):
+        marker = {'__type': 'timestamp', 'value': '2025-06-15T12:30:45Z'}
+        result = _deserialize_value(marker, mock_db)
+        assert isinstance(result, datetime.datetime)
+        assert result.tzinfo is not None
+
+    def test_timestamp_naive(self, mock_db):
+        marker = {'__type': 'timestamp', 'value': '2025-01-01T00:00:00'}
+        result = _deserialize_value(marker, mock_db)
+        assert isinstance(result, datetime.datetime)
+        assert result.tzinfo is None
+
+    def test_timestamp_truncates_nanoseconds(self, mock_db):
+        """Fractional seconds beyond 6 digits should be truncated."""
+        marker = {'__type': 'timestamp', 'value': '2025-12-31T23:59:59+00:00.999999999Z'}
+        # The isoformat from FakeDatetimeWithNanoseconds with nanos appends .NNNNNNNNNz
+        # Let's test with a more realistic format
+        marker2 = {'__type': 'timestamp', 'value': '2025-12-31T23:59:59.123456789+00:00'}
+        result = _deserialize_value(marker2, mock_db)
+        assert isinstance(result, datetime.datetime)
+
+    def test_reference(self, mock_db):
+        marker = {'__type': 'reference', 'value': 'users/abc123'}
+        result = _deserialize_value(marker, mock_db)
+        mock_db.document.assert_called_with('users/abc123')
+        assert result.path == 'users/abc123'
+
+    def test_reference_nested(self, mock_db):
+        marker = {'__type': 'reference', 'value': 'users/u1/posts/p1'}
+        result = _deserialize_value(marker, mock_db)
+        assert result.path == 'users/u1/posts/p1'
+
+    def test_geopoint(self, mock_db):
+        marker = {'__type': 'geopoint', 'latitude': 40.7128, 'longitude': -74.006}
+        # Patch the GeoPoint import inside _deserialize_value
+        import unittest.mock as um
+        with um.patch('ext_firestore.GeoPoint', create=True, side_effect=FakeGeoPoint) as mock_gp:
+            # Need to patch at the import location - use a different approach
+            pass
+        # Since GeoPoint is lazily imported, mock it at the module level
+        import ext_firestore
+        with um.patch.dict('sys.modules', {'google.cloud.firestore_v1._helpers': MagicMock(GeoPoint=FakeGeoPoint)}):
+            result = _deserialize_value(marker, mock_db)
+            assert result.latitude == 40.7128
+            assert result.longitude == -74.006
+
+    def test_bytes(self, mock_db):
+        import base64
+        original = b'\x00\x01\x02\xff'
+        marker = {'__type': 'bytes', 'value': base64.b64encode(original).decode('ascii')}
+        result = _deserialize_value(marker, mock_db)
+        assert result == original
+
+    def test_empty_bytes(self, mock_db):
+        marker = {'__type': 'bytes', 'value': ''}
+        result = _deserialize_value(marker, mock_db)
+        assert result == b''
+
+
+class TestDeserializeValueNested:
+    """Markers inside nested structures are deserialized."""
+
+    def test_dict_with_timestamp(self, mock_db):
+        data = {
+            'name': 'Alice',
+            'created': {'__type': 'timestamp', 'value': '2025-06-15T12:00:00+00:00'},
+        }
+        result = _deserialize_value(data, mock_db)
+        assert result['name'] == 'Alice'
+        assert isinstance(result['created'], datetime.datetime)
+
+    def test_array_with_markers(self, mock_db):
+        data = [
+            {'__type': 'timestamp', 'value': '2025-01-01T00:00:00+00:00'},
+            {'__type': 'reference', 'value': 'col/doc'},
+            'plain string',
+            42,
+        ]
+        result = _deserialize_value(data, mock_db)
+        assert isinstance(result[0], datetime.datetime)
+        assert result[1].path == 'col/doc'
+        assert result[2] == 'plain string'
+        assert result[3] == 42
+
+    def test_deeply_nested_markers(self, mock_db):
+        data = {
+            'l1': {
+                'l2': {
+                    'ts': {'__type': 'timestamp', 'value': '2025-06-15T00:00:00+00:00'},
+                    'ref': {'__type': 'reference', 'value': 'a/b'},
+                }
+            }
+        }
+        result = _deserialize_value(data, mock_db)
+        assert isinstance(result['l1']['l2']['ts'], datetime.datetime)
+        assert result['l1']['l2']['ref'].path == 'a/b'
+
+
+class TestDeserializeValueBackwardCompat:
+    """Old payloads without markers pass through unchanged."""
+
+    def test_plain_string_timestamp(self, mock_db):
+        """Old-format ISO string without marker stays as string."""
+        result = _deserialize_value('2025-06-15T12:00:00+00:00', mock_db)
+        assert result == '2025-06-15T12:00:00+00:00'
+        assert isinstance(result, str)
+
+    def test_plain_string_reference(self, mock_db):
+        """Old-format reference path without marker stays as string."""
+        result = _deserialize_value('users/abc123', mock_db)
+        assert result == 'users/abc123'
+
+    def test_dict_without_type_key(self, mock_db):
+        """Regular dicts without __type are recursed normally."""
+        data = {'name': 'Alice', 'age': 30}
+        result = _deserialize_value(data, mock_db)
+        assert result == {'name': 'Alice', 'age': 30}
+
+    def test_mixed_old_and_new(self, mock_db):
+        """Dict mixing old plain values and new markers."""
+        data = {
+            'old_timestamp': '2025-01-01T00:00:00',
+            'new_timestamp': {'__type': 'timestamp', 'value': '2025-06-15T00:00:00+00:00'},
+            'count': 42,
+        }
+        result = _deserialize_value(data, mock_db)
+        assert isinstance(result['old_timestamp'], str)
+        assert isinstance(result['new_timestamp'], datetime.datetime)
+        assert result['count'] == 42
+
+
+class TestRoundtrip:
+    """Serialize -> json.dumps -> json.loads -> deserialize preserves types."""
+
+    def test_timestamp_roundtrip(self, mock_db):
+        ts = FakeDatetimeWithNanoseconds(2025, 6, 15, 12, 0, 0,
+                                          tzinfo=datetime.timezone.utc)
+        serialized = _serialize_value(ts)
+        json_str = json.dumps(serialized)
+        parsed = json.loads(json_str)
+        result = _deserialize_value(parsed, mock_db)
+        assert isinstance(result, datetime.datetime)
+        assert result.year == 2025
+        assert result.month == 6
+
+    def test_reference_roundtrip(self, mock_db):
+        ref = FakeDocumentReference('users/abc123', 'abc123')
+        serialized = _serialize_value(ref)
+        json_str = json.dumps(serialized)
+        parsed = json.loads(json_str)
+        result = _deserialize_value(parsed, mock_db)
+        assert result.path == 'users/abc123'
+
+    def test_bytes_roundtrip(self, mock_db):
+        original = b'\x00\x01\x02\xff'
+        serialized = _serialize_value(original)
+        json_str = json.dumps(serialized)
+        parsed = json.loads(json_str)
+        result = _deserialize_value(parsed, mock_db)
+        assert result == original
+
+    def test_complex_doc_roundtrip(self, mock_db):
+        """Full document with mixed types survives round-trip."""
+        ts = FakeDatetimeWithNanoseconds(2025, 6, 15, 12, 0, 0,
+                                          tzinfo=datetime.timezone.utc)
+        ref = FakeDocumentReference('col/doc', 'doc')
+        doc = {
+            'name': 'Test',
+            'active': True,
+            'count': 42,
+            'created': ts,
+            'manager': ref,
+            'data': b'\x01\x02',
+            'tags': ['a', 'b'],
+            'nested': {'ts': ts, 'value': 'text'},
+        }
+        serialized = {k: _serialize_value(v) for k, v in doc.items()}
+        json_str = json.dumps(serialized)
+        parsed = json.loads(json_str)
+        result = _deserialize_value(parsed, mock_db)
+
+        assert result['name'] == 'Test'
+        assert result['active'] is True
+        assert result['count'] == 42
+        assert isinstance(result['created'], datetime.datetime)
+        assert result['manager'].path == 'col/doc'
+        assert result['data'] == b'\x01\x02'
+        assert result['tags'] == ['a', 'b']
+        assert isinstance(result['nested']['ts'], datetime.datetime)

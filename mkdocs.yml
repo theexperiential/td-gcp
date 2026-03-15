@@ -1,0 +1,90 @@
+site_name: TD ‹› GCP
+site_description: TouchDesigner x GCP integration suite
+site_url: https://theexperiential.github.io/td-gcp/
+repo_url: https://github.com/theexperiential/td-gcp
+repo_name: td-gcp
+
+theme:
+  name: material
+  font:
+    text: Open Sans
+    code: Roboto Mono
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
+extra_css:
+  - stylesheets/extra.css
+
+plugins:
+  - search
+  - tags
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - tables
+  - attr_list
+  - md_in_html
+  - def_list
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Firestore:
+    - firestore/index.md
+    - Configuration: firestore/configuration.md
+    - Sync & Filtering: firestore/sync.md
+    - Write Operations: firestore/writes.md
+    - Offline Queue & Cache: firestore/offline.md
+    - Callbacks: firestore/callbacks.md
+    - API Reference: firestore/api.md
+    - Architecture: firestore/architecture.md
+    - Troubleshooting: firestore/troubleshooting.md
+  - Recipes: recipes.md
+  - Changelog: changelog.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/theexperiential/td-gcp
