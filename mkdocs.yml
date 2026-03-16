@@ -81,6 +81,13 @@ nav:
     - API Reference: firestore/api.md
     - Architecture: firestore/architecture.md
     - Troubleshooting: firestore/troubleshooting.md
+  - Storage:
+    - storage/index.md
+    - Configuration: storage/configuration.md
+    - Callbacks: storage/callbacks.md
+    - API Reference: storage/api.md
+    - Architecture: storage/architecture.md
+    - Troubleshooting: storage/troubleshooting.md
   - Recipes: recipes.md
   - Changelog: changelog.md
 

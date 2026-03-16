@@ -20,6 +20,13 @@ path	type	strategy	rel_file_path	timestamp	dirty	build	touch_build	node_x	node_y
 /gcp/firestore/ext_firestore	text	py	gcp/firestore/ext_firestore.py	2026-03-15 05:14:31 UTC				900	400	0.9000,0.3000,0.4000
 /gcp/firestore/ext_connection	text	py	gcp/firestore/ext_connection.py	2026-03-15 05:14:31 UTC				300	400	0.9000,0.3000,0.4000
 /gcp/firestore/ext_bootstrap	text	py	gcp/firestore/ext_bootstrap.py	2026-03-15 05:14:31 UTC				0	400	0.9000,0.3000,0.4000
-/gcp/firestore/collections	base	tdn	gcp/firestore/collections.tdn	2026-03-15 06:53:54 UTC	True	86	099.2025.32280	900	0	0.3000,0.5000,0.9000
-/gcp/firestore	base	tdn	gcp/firestore.tdn	2026-03-15 06:53:54 UTC	True	87	099.2025.32280	200	200	0.3000,0.5000,0.9000
+/gcp/firestore/collections	base	tdn	gcp/firestore/collections.tdn	2026-03-16 15:08:19 UTC	True	88	099.2025.32280	900	0	0.3000,0.5000,0.9000
+/gcp/firestore	base	tdn	gcp/firestore.tdn	2026-03-16 15:08:19 UTC		87	099.2025.32280	200	200	0.3000,0.5000,0.9000
 /gcp	container	tdn	gcp.tdn	2026-03-15 05:15:29 UTC		16	099.2025.32280	200	100	0.3000,0.5000,0.9000
+/gcp/storage	base	tdn	gcp/storage.tdn	2026-03-16 15:08:19 UTC		4	099.2025.32280	200	-400	0.3000,0.5000,0.9000
+/gcp/storage/transfers	table	tsv	gcp/storage/transfers.tsv	2026-03-16 14:05:02 UTC				600	0	0.9000,0.3000,0.4000
+/gcp/storage/status	table	tsv	gcp/storage/status.tsv	2026-03-16 14:05:02 UTC				300	0	0.9000,0.3000,0.4000
+/gcp/storage/par_exec	parexec	py	gcp/storage/par_exec.py	2026-03-16 14:05:02 UTC				0	-400	0.9000,0.3000,0.4000
+/gcp/storage/ext_storage	text	py	gcp/storage/ext_storage.py	2026-03-16 14:05:02 UTC				600	400	0.9000,0.3000,0.4000
+/gcp/storage/ext_connection	text	py	gcp/storage/ext_connection.py	2026-03-16 14:05:02 UTC				300	400	0.9000,0.3000,0.4000
+/gcp/storage/ext_bootstrap	text	py	gcp/storage/ext_bootstrap.py	2026-03-16 14:05:02 UTC				0	400	0.9000,0.3000,0.4000

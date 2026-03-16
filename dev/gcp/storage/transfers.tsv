@@ -1,0 +1,79 @@
+transfer_id	type	remote_path	local_path	status	started_at	completed_at	error	size
+2	upload	test/data.json	/tmp/td_storage_test/data.json	complete	2026-03-16 07:21:54	2026-03-16 07:56:52		42
+3	upload	test/subfolder/nested.txt	/tmp/td_storage_test/subfolder/nested.txt	complete	2026-03-16 07:21:54	2026-03-16 07:56:52		20
+4	list	test/		complete	2026-03-16 07:22:01	2026-03-16 07:56:52		29
+5	metadata	test/hello.txt		complete	2026-03-16 07:22:12	2026-03-16 07:57:00		27
+6	download	test/hello.txt	/tmp/td_storage_download/hello.txt	complete	2026-03-16 07:23:01	2026-03-16 07:57:30		
+7	delete	test/data.json		complete	2026-03-16 07:23:30	2026-03-16 07:57:44		
+8	sync	test/	/tmp/td_storage_download	complete	2026-03-16 07:23:51	2026-03-16 07:57:44		
+2	delete	test/subfolder/nested.txt		pending	2026-03-16 07:44:25			
+3	upload	test/hello.txt	/tmp/td_storage_test/hello.txt	pending	2026-03-16 07:44:31			
+4	upload	test/subfolder/nested.txt	/tmp/td_storage_test/subfolder/nested.txt	pending	2026-03-16 07:44:31			
+5	upload	test/data.json	/tmp/td_storage_test/data.json	pending	2026-03-16 07:44:31			
+6	list	test/		pending	2026-03-16 07:44:39			
+7	metadata	test/hello.txt		pending	2026-03-16 07:44:39			
+8	signed_url	test/hello.txt		pending	2026-03-16 07:44:39			
+9	download	test/hello.txt	/tmp/td_storage_download/hello.txt	complete	2026-03-16 07:44:39	2026-03-16 07:57:44		
+10	delete	test/data.json		cancelled	2026-03-16 07:44:39	2026-03-16 07:44:53		
+11	sync	test/	/tmp/td_storage_download	complete	2026-03-16 07:44:45	2026-03-16 07:45:09		
+12	upload	test/hello.txt	/tmp/td_storage_test/hello.txt	complete	2026-03-16 07:47:28	2026-03-16 07:47:28		29
+13	upload	test/data.json	/tmp/td_storage_test/data.json	complete	2026-03-16 07:47:28	2026-03-16 07:47:28		42
+14	upload	test/subfolder/nested.txt	/tmp/td_storage_test/subfolder/nested.txt	complete	2026-03-16 07:47:28	2026-03-16 07:47:29		20
+15	list	test/		complete	2026-03-16 07:47:39	2026-03-16 07:47:40		
+16	metadata	test/hello.txt		complete	2026-03-16 07:47:39	2026-03-16 07:47:40		29
+17	signed_url	test/hello.txt		complete	2026-03-16 07:47:39	2026-03-16 07:47:40		
+18	download	test/hello.txt	/tmp/td_storage_download/hello.txt	complete	2026-03-16 07:47:57	2026-03-16 07:47:57		
+19	download	test/data.json	/tmp/td_storage_download/data.json	complete	2026-03-16 07:47:57	2026-03-16 07:47:57		
+20	download	test/subfolder/nested.txt	/tmp/td_storage_download/subfolder/nested.txt	complete	2026-03-16 07:47:57	2026-03-16 07:47:57		
+21	delete	test/data.json		complete	2026-03-16 07:48:12	2026-03-16 07:48:13		
+22	list	test/		complete	2026-03-16 07:48:23	2026-03-16 07:48:23		
+23	sync	test/	/tmp/td_storage_test	complete	2026-03-16 07:48:38	2026-03-16 07:48:39		
+24	upload	test/extra/server_only.txt	/tmp/td_storage_test/hello.txt	complete	2026-03-16 07:48:53	2026-03-16 07:48:54		29
+25	sync	test/	/tmp/td_storage_download	complete	2026-03-16 07:49:29	2026-03-16 07:49:31		
+26	sync	test/	/tmp/td_storage_test	complete	2026-03-16 07:49:50	2026-03-16 07:49:51		
+27	list	test/		complete	2026-03-16 07:50:00	2026-03-16 07:50:00		
+28	upload	test/cancel_test/file_0.txt	/tmp/td_storage_test/hello.txt	complete	2026-03-16 07:50:12	2026-03-16 07:50:12		29
+29	upload	test/cancel_test/file_1.txt	/tmp/td_storage_test/hello.txt	complete	2026-03-16 07:50:12	2026-03-16 07:50:12		29
+30	upload	test/cancel_test/file_2.txt	/tmp/td_storage_test/hello.txt	complete	2026-03-16 07:50:12	2026-03-16 07:50:13		29
+31	upload	test/cancel_test/file_3.txt	/tmp/td_storage_test/hello.txt	complete	2026-03-16 07:50:12	2026-03-16 07:50:13		29
+32	upload	test/cancel_test/file_4.txt	/tmp/td_storage_test/hello.txt	complete	2026-03-16 07:50:12	2026-03-16 07:50:13		29
+33	delete	test/cancel_test/file_0.txt		complete	2026-03-16 07:50:31	2026-03-16 07:50:31		
+34	delete	test/cancel_test/file_1.txt		complete	2026-03-16 07:50:31	2026-03-16 07:50:31		
+35	delete	test/cancel_test/file_2.txt		complete	2026-03-16 07:50:31	2026-03-16 07:50:31		
+36	delete	test/cancel_test/file_3.txt		complete	2026-03-16 07:50:31	2026-03-16 07:50:31		
+37	delete	test/cancel_test/file_4.txt		complete	2026-03-16 07:50:31	2026-03-16 07:50:31		
+38	delete	test/hello.txt		complete	2026-03-16 07:50:52	2026-03-16 07:50:52		
+39	delete	test/data.json		complete	2026-03-16 07:50:52	2026-03-16 07:50:52		
+40	delete	test/subfolder/nested.txt		complete	2026-03-16 07:50:52	2026-03-16 07:50:52		
+41	list	test/		complete	2026-03-16 07:51:02	2026-03-16 07:51:02		
+42	upload	test/hello.txt	/tmp/td_storage_test/hello.txt	complete	2026-03-16 07:52:49	2026-03-16 07:52:50		29
+43	upload	test/data.json	/tmp/td_storage_test/data.json	complete	2026-03-16 07:52:49	2026-03-16 07:52:50		42
+44	upload	test/subfolder/nested.txt	/tmp/td_storage_test/subfolder/nested.txt	complete	2026-03-16 07:52:49	2026-03-16 07:52:50		20
+45	list	test/		complete	2026-03-16 07:53:01	2026-03-16 07:53:01		
+46	metadata	test/hello.txt		complete	2026-03-16 07:53:01	2026-03-16 07:53:01		29
+47	signed_url	test/hello.txt		complete	2026-03-16 07:53:01	2026-03-16 07:53:01		
+48	download	test/hello.txt	/tmp/td_storage_download/hello.txt	complete	2026-03-16 07:53:21	2026-03-16 07:53:21		
+49	download	test/data.json	/tmp/td_storage_download/data.json	complete	2026-03-16 07:53:21	2026-03-16 07:53:21		
+50	download	test/subfolder/nested.txt	/tmp/td_storage_download/subfolder/nested.txt	complete	2026-03-16 07:53:21	2026-03-16 07:53:21		
+51	delete	test/data.json		complete	2026-03-16 07:53:37	2026-03-16 07:53:37		
+52	list	test/		complete	2026-03-16 07:53:42	2026-03-16 07:53:42		
+53	sync	test/	/tmp/td_storage_test	complete	2026-03-16 07:53:54	2026-03-16 07:53:55		
+54	sync	test/	/tmp/td_storage_download	complete	2026-03-16 07:54:14	2026-03-16 07:54:15		
+55	upload	test/orphan/will_be_deleted.txt	/tmp/td_storage_test/hello.txt	complete	2026-03-16 07:54:28	2026-03-16 07:54:28		29
+56	sync	test/	/tmp/td_storage_test	complete	2026-03-16 07:54:37	2026-03-16 07:54:39		
+57	delete	test/hello.txt		complete	2026-03-16 07:54:53	2026-03-16 07:54:53		
+58	delete	test/data.json		complete	2026-03-16 07:54:53	2026-03-16 07:54:53		
+59	delete	test/subfolder/nested.txt		complete	2026-03-16 07:54:53	2026-03-16 07:54:53		
+60	list	test/		complete	2026-03-16 07:54:57	2026-03-16 07:54:57		
+61	delete	test/orphan/will_be_deleted.txt		failed	2026-03-16 07:55:07	2026-03-16 07:55:08	404 DELETE https://storage.googleapis.com/storage/v1/b/touch-gcp-testing.firebasestorage.app/o/test%2Forphan%2Fwill_be_deleted.txt?prettyPrint=false: No such object: touch-gcp-testing.firebasestorage.app/test/orphan/will_be_deleted.txt	
+62	list	test/		complete	2026-03-16 07:55:21	2026-03-16 07:55:21		
+63	delete	test/extra/server_only.txt		complete	2026-03-16 07:56:01	2026-03-16 07:56:01		
+1	upload	test/hello.txt	/tmp/td_storage_test/hello.txt	complete	2026-03-16 07:56:51	2026-03-16 07:56:52		29
+2	upload	test/data.json	/tmp/td_storage_test/data.json	pending	2026-03-16 07:56:51			
+3	upload	test/subfolder/nested.txt	/tmp/td_storage_test/subfolder/nested.txt	pending	2026-03-16 07:56:51			
+4	upload	test/orphan/should_die.txt	/tmp/td_storage_test/hello.txt	pending	2026-03-16 07:56:51			
+5	sync	test/	/tmp/td_storage_test	pending	2026-03-16 07:56:59			
+6	sync	test/	/tmp/td_storage_test	pending	2026-03-16 07:57:30			
+7	delete	test/hello.txt		pending	2026-03-16 07:57:44			
+8	delete	test/data.json		pending	2026-03-16 07:57:44			
+9	delete	test/subfolder/nested.txt		pending	2026-03-16 07:57:44			

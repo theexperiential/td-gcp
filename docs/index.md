@@ -14,11 +14,13 @@ Drop-in COMPs that connect TouchDesigner to Google Cloud Platform services -- re
 
     [:octicons-arrow-right-24: Firestore docs](firestore/index.md)
 
--   **Storage** *(coming soon)*
+-   **Storage**
 
     ---
 
-    Upload, download, and manage files in Firebase Storage directly from TouchDesigner.
+    Upload, download, sync, and manage files in Firebase Storage directly from TouchDesigner. Includes concurrency control, circuit breaker, and folder sync with orphan deletion.
+
+    [:octicons-arrow-right-24: Storage docs](storage/index.md)
 
 </div>
 
@@ -27,7 +29,7 @@ Drop-in COMPs that connect TouchDesigner to Google Cloud Platform services -- re
 ## Requirements
 
 - **TouchDesigner** 2025.32280 or later
-- **Google Cloud project** with the relevant service(s) enabled (e.g., Firestore)
+- **Google Cloud project** with the relevant service(s) enabled (Firestore, Storage, etc.)
 - **Service account JSON key** with appropriate permissions
 
 ## Quick Start

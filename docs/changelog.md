@@ -1,5 +1,26 @@
 # Changelog
 
+## Build 4 (Storage) -- 2026-03-16
+
+Initial release of the Storage COMP.
+
+### Features
+
+- Upload, download, and delete files in Firebase Cloud Storage
+- Bidirectional folder sync (`SyncFolder`) with direction control (`'upload'`, `'download'`, `'both'`)
+- Orphan deletion toggles -- `Delete Remote Orphans` and `Delete Local Orphans` for mirror-style sync
+- Path resolution -- relative paths resolve against `Local Path` and `Remote Path` parameters; absolute paths bypass them
+- Concurrency control -- `Max Concurrent` limits simultaneous transfers with automatic queuing
+- `ListFiles` and `GetMetadata` for browsing remote blobs asynchronously
+- `GetPublicUrl` and `GetSignedUrl` for sharing files
+- `Make Public` toggle with per-upload override
+- Auto-bootstrap with `uv` -- installs `firebase-admin` and `google-cloud-storage` into a shared venv
+- Circuit breaker with exponential backoff for connection resilience
+- User callbacks: `onTransferComplete`, `onListComplete`, `onSyncComplete`, `onConnectionStateChange`
+- Transfers tableDAT for real-time transfer status tracking
+- Structured logging with ring buffer, FIFO DAT, and optional external log DAT
+- Upload/Download/Sync pulse buttons for one-click folder operations
+
 ## Build 87 -- 2026-03-15
 
 Initial public release of the Firestore COMP.

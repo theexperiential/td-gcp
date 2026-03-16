@@ -1,0 +1,342 @@
+{
+	"format": "tdn",
+	"version": "1.0",
+	"build": 4,
+	"generator": "Embody/5.0.218",
+	"td_build": "099.2025.32280",
+	"exported_at": "2026-03-16T15:08:19Z",
+	"network_path": "/gcp/storage",
+	"options": {
+		"include_dat_content": false
+	},
+	"type_defaults": {
+		"tableDAT": {
+			"parameters": {
+				"syncfile": true
+			},
+			"size": [130, 90],
+			"color": [0.9, 0.3, 0.4],
+			"tags": ["tsv"]
+		},
+		"textDAT": {
+			"parameters": {
+				"language": "python"
+			},
+			"size": [130, 90]
+		}
+	},
+	"custom_pars": {
+		"Creds": [
+			{
+				"name": "Privatekey",
+				"style": "File",
+				"label": "Private Key File",
+				"help": "Path to your Google Cloud service account JSON key file. Changing this automatically triggers a reconnect.",
+				"value": "/Users/rosco/Desktop/touch-gcp-testing-firebase-adminsdk-fbsvc-92904ceea3.json"
+			},
+			{
+				"name": "Bucket",
+				"style": "Str",
+				"label": "Bucket Name",
+				"help": "Firebase Storage bucket name (e.g. my-project.firebasestorage.app). Leave blank to auto-derive from the service account's project ID."
+			}
+		],
+		"Storage": [
+			{
+				"name": "Localpath",
+				"style": "Folder",
+				"label": "Local Path",
+				"help": "Local root folder for uploads and downloads. Subfolder structure is preserved in both directions relative to Remote Path.",
+				"value": "/tmp/td_storage_test"
+			},
+			{
+				"name": "Remotepath",
+				"style": "Str",
+				"label": "Remote Path",
+				"help": "Remote prefix in the bucket (e.g. media/). All upload, download, and sync operations are relative to this path.",
+				"value": "test/"
+			},
+			{
+				"name": "Makepublic",
+				"style": "Toggle",
+				"label": "Make Public",
+				"help": "When on, uploaded blobs are made public automatically. Can be overridden per-call via the Upload() method's make_public argument."
+			},
+			{
+				"name": "Deleteremoteorphans",
+				"style": "Toggle",
+				"label": "Delete Remote Orphans",
+				"startSection": true,
+				"help": "During upload or sync, delete remote blobs under Remote Path that don't exist locally. Effectively makes local the source of truth."
+			},
+			{
+				"name": "Deletelocalorphans",
+				"style": "Toggle",
+				"label": "Delete Local Orphans",
+				"help": "During download or sync, delete local files under Local Path that don't exist remotely. Effectively makes remote the source of truth."
+			},
+			{
+				"name": "Maxconcurrent",
+				"style": "Int",
+				"label": "Max Concurrent",
+				"startSection": true,
+				"help": "Maximum number of simultaneous upload/download operations. Additional transfers are queued and submitted as active ones complete.",
+				"value": 3
+			}
+		],
+		"Conn": [
+			{
+				"name": "Autoconnect",
+				"style": "Toggle",
+				"label": "Auto Connect",
+				"help": "Automatically connect to Firebase Storage after bootstrap completes. If off, you must pulse Connect manually.",
+				"value": true
+			},
+			{
+				"name": "Circuitfailurethreshold",
+				"style": "Int",
+				"label": "Circuit Failure Threshold",
+				"help": "Number of consecutive failures before the circuit breaker opens and blocks further attempts until timeout.",
+				"value": 5
+			},
+			{
+				"name": "Circuittimeout",
+				"style": "Float",
+				"label": "Circuit Timeout (s)",
+				"help": "Seconds to wait before the circuit breaker resets from open to half-open, allowing a retry.",
+				"value": 60
+			},
+			{
+				"name": "Backoffbase",
+				"style": "Float",
+				"label": "Backoff Base",
+				"help": "Base multiplier (seconds) for exponential backoff between reconnect attempts.",
+				"value": 2
+			},
+			{
+				"name": "Backoffmax",
+				"style": "Float",
+				"label": "Backoff Max (s)",
+				"help": "Maximum delay (seconds) between reconnect attempts, capping exponential backoff.",
+				"value": 300
+			}
+		],
+		"Callbacks": [
+			{
+				"name": "Createcallbacksdat",
+				"style": "Pulse",
+				"label": "Create",
+				"help": "Create a new callbacks DAT pre-filled with stub functions for onTransferComplete, onListComplete, onSyncComplete, and onConnectionStateChange."
+			},
+			{
+				"name": "Callbacksdat",
+				"style": "DAT",
+				"label": "Callbacks DAT",
+				"help": "Path to a DAT with callback functions. Leave blank to disable."
+			},
+			{
+				"name": "Logop",
+				"style": "DAT",
+				"label": "External Log DAT",
+				"help": "Path to an external DAT to receive log entries (e.g. a fifoDAT). In addition to the internal log and textport output."
+			}
+		],
+		"Controls": [
+			{
+				"name": "Upload",
+				"style": "Pulse",
+				"help": "Upload all files from Local Path to Remote Path, preserving subfolder structure."
+			},
+			{
+				"name": "Download",
+				"style": "Pulse",
+				"help": "Download all files from Remote Path to Local Path, preserving subfolder structure."
+			},
+			{
+				"name": "Sync",
+				"style": "Pulse",
+				"help": "Bidirectional sync -- uploads missing/newer local files and downloads missing/newer remote files."
+			},
+			{
+				"name": "Connect",
+				"style": "Pulse",
+				"startSection": true,
+				"help": "Connect to Firebase Storage using the current credentials."
+			},
+			{
+				"name": "Disconnect",
+				"style": "Pulse",
+				"help": "Cleanly disconnect from Firebase Storage."
+			},
+			{
+				"name": "Reset",
+				"style": "Pulse",
+				"help": "Full teardown -- clears transfers, resets circuit breaker, disconnects."
+			},
+			{
+				"name": "Canceltransfers",
+				"style": "Pulse",
+				"label": "Cancel Transfers",
+				"startSection": true,
+				"help": "Cancel all pending transfers and mark active ones for cancellation on completion."
+			}
+		],
+		"About": [
+			{
+				"name": "Build",
+				"style": "Int",
+				"label": "Build Number",
+				"readOnly": true,
+				"value": 4
+			},
+			{
+				"name": "Date",
+				"style": "Str",
+				"label": "Build Date",
+				"readOnly": true,
+				"value": "2026-03-16 15:08:19 UTC"
+			},
+			{
+				"name": "Touchbuild",
+				"style": "Str",
+				"label": "Touch Build",
+				"readOnly": true,
+				"value": "2025.32280"
+			}
+		]
+	},
+	"parameters": {
+		"ext0object": "op('./ext_storage').module.StorageExt(me)",
+		"ext0name": "StorageExt",
+		"ext0promote": true,
+		"parentshortcut": "storage",
+		"opshortcut": "storage",
+		"ext1object": "op('./ext_bootstrap').module.BootstrapExt(me)",
+		"ext1name": "BootstrapExt",
+		"ext2object": "op('./ext_connection').module.ConnectionExt(me)",
+		"ext2name": "ConnectionExt"
+	},
+	"operators": [
+		{
+			"name": "log",
+			"type": "fifoDAT",
+			"parameters": {
+				"callbacks": "log_callbacks",
+				"fromop": "=parent()",
+				"maxlines": 200
+			},
+			"size": [130, 90],
+			"color": [0.67, 0.67, 0.67]
+		},
+		{
+			"name": "status",
+			"type": "tableDAT",
+			"parameters": {
+				"file": "gcp/storage/status.tsv",
+				"rows": 2,
+				"cols": 6
+			},
+			"position": [300, 0]
+		},
+		{
+			"name": "par_exec",
+			"type": "parameterexecuteDAT",
+			"parameters": {
+				"fromop": "=parent()",
+				"op": "=parent()",
+				"pars": "*",
+				"file": "gcp/storage/par_exec.py",
+				"syncfile": true,
+				"language": "python"
+			},
+			"flags": ["viewer"],
+			"position": [0, -400],
+			"size": [130, 90],
+			"color": [0.9, 0.3, 0.4],
+			"tags": ["py"]
+		},
+		{
+			"name": "transfers",
+			"type": "tableDAT",
+			"parameters": {
+				"file": "gcp/storage/transfers.tsv",
+				"rows": 79,
+				"cols": 9
+			},
+			"position": [600, 0]
+		},
+		{
+			"name": "ext_storage",
+			"type": "textDAT",
+			"parameters": {
+				"file": "gcp/storage/ext_storage.py",
+				"syncfile": true
+			},
+			"position": [600, 400],
+			"color": [0.9, 0.3, 0.4],
+			"tags": ["py"]
+		},
+		{
+			"name": "ext_bootstrap",
+			"type": "textDAT",
+			"parameters": {
+				"file": "gcp/storage/ext_bootstrap.py",
+				"syncfile": true
+			},
+			"position": [0, 400],
+			"color": [0.9, 0.3, 0.4],
+			"tags": ["py"]
+		},
+		{
+			"name": "log_callbacks",
+			"type": "textDAT",
+			"flags": ["viewer"],
+			"position": [0, -120],
+			"color": [0.67, 0.67, 0.67],
+			"dock": "log"
+		},
+		{
+			"name": "ext_connection",
+			"type": "textDAT",
+			"parameters": {
+				"file": "gcp/storage/ext_connection.py",
+				"syncfile": true
+			},
+			"position": [300, 400],
+			"color": [0.9, 0.3, 0.4],
+			"tags": ["py"]
+		}
+	],
+	"annotations": [
+		{
+			"name": "annotate1",
+			"mode": "annotate",
+			"title": "Extensions",
+			"text": "BootstrapExt - ConnectionExt - StorageExt",
+			"position": [-89, 300],
+			"size": [919, 290],
+			"color": [0.18, 0.25, 0.38],
+			"opacity": 0.7
+		},
+		{
+			"name": "annotate2",
+			"mode": "annotate",
+			"title": "Data",
+			"text": "log - status - transfers - log_callbacks",
+			"position": [-100, -145],
+			"size": [930, 375],
+			"color": [0.18, 0.32, 0.22],
+			"opacity": 0.7
+		},
+		{
+			"name": "annotate3",
+			"mode": "annotate",
+			"title": "Exec",
+			"text": "par_exec (pulse handler)",
+			"position": [-100, -500],
+			"size": [930, 290],
+			"color": [0.3, 0.22, 0.18],
+			"opacity": 0.7
+		}
+	]
+}
