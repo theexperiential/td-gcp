@@ -18,16 +18,27 @@ Real-time bidirectional sync between Firestore collections and TouchDesigner tab
 - **Callbacks** -- hook into `onFirestoreChange`, `onWriteComplete`, `onConnectionStateChange`
 - **Cache hydration** -- populate tables from local cache on startup for instant data
 
-### Storage *(coming soon)*
+### Storage
 
-Upload, download, and manage files in Firebase Storage directly from TouchDesigner.
+Upload, download, sync, and manage files in Firebase Storage directly from TouchDesigner. Includes concurrency control, circuit breaker, and folder sync with orphan deletion.
+
+- **Upload & download** -- push and pull files with automatic subfolder structure preservation
+- **Folder sync** -- bidirectional sync with direction control (`upload`, `download`, `both`)
+- **Orphan deletion** -- mirror-style sync with `Delete Remote Orphans` / `Delete Local Orphans` toggles
+- **Concurrency control** -- `Max Concurrent` limits simultaneous transfers with automatic queuing
+- **Listing & metadata** -- `ListFiles` and `GetMetadata` for browsing remote blobs asynchronously
+- **URL generation** -- `GetPublicUrl` and `GetSignedUrl` for sharing files
+- **Circuit breaker** -- exponential backoff prevents runaway reconnection loops
+- **Auto-bootstrap** -- installs Python dependencies (`firebase-admin`, `google-cloud-storage`) on first run via `uv`
+- **Callbacks** -- hook into `onTransferComplete`, `onListComplete`, `onSyncComplete`, `onConnectionStateChange`
+- **Transfer tracking** -- `transfers` tableDAT for real-time status monitoring
 
 ---
 
 ## Requirements
 
 - **TouchDesigner** 2025.32280 or later
-- **Google Cloud project** with the relevant service(s) enabled (e.g., Firestore)
+- **Google Cloud project** with the relevant service(s) enabled (Firestore, Storage, etc.)
 - **Service account JSON key** with appropriate permissions
 
 ## Quick Start
