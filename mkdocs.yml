@@ -6,6 +6,7 @@ repo_name: td-gcp
 
 theme:
   name: material
+  variant: classic
   font:
     text: Open Sans
     code: Roboto Mono
